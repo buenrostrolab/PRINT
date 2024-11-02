@@ -15,13 +15,13 @@ library(ggrepel)
 ###################
 
 # Load ATAC peak ranges
-regions <- readRDS("../../data/mHSCAging10xV3/regionRanges.rds")
+regions <- readRDS("../../data/mHSCAging10xMultiome/regionRanges.rds")
 
 # Load peak-by-pseudobulk count matrix
-pbulkCounts <- readRDS("../../data/mHSCAging10xV3/pseudobulkATAC.rds")
+pbulkCounts <- readRDS("../../data/mHSCAging10xMultiome/pseudobulkATAC.rds")
 
 # Load pseudobulk clustering results
-pbulkClusters <- read.table("../../data/mHSCAging10xV3/pbulkClusters.txt", sep = "\t")$V1
+pbulkClusters <- read.table("../../data/mHSCAging10xMultiome/pbulkClusters.txt", sep = "\t")$V1
 
 # Group pseudo-bulk clusters into sub-populations
 subpopAnno <- list(
@@ -38,7 +38,7 @@ subpopLabels <- unname(sapply(pbulkClusters, function(x){subpopAnno[[x]]}))
 cisBPMotifs <- readRDS("../../data/shared/cisBP_mouse_pwms_2021.rds")
 
 # Load differential RNA results
-diffRNA <- read.table("../../data/mHSCAging10xV3/diffRNA.tsv", sep = "\t")
+diffRNA <- read.table("../../data/mHSCAging10xMultiome/diffRNA.tsv", sep = "\t")
 
 ##########################
 # Calculate motif scores #
@@ -80,7 +80,7 @@ motifScores <- pbmcapply::pbmcmapply(
 )
 rownames(motifScores) <- colnames(pbulkSE)
 motifScores[is.na(motifScores)] <- 0
-saveRDS(motifScores, "../../data/mHSCAging10xV3/motifScores.rds")
+saveRDS(motifScores, "../../data/mHSCAging10xMultiome/motifScores.rds")
 
 #####################
 # Visualize results #
@@ -92,7 +92,7 @@ RNAColors <- colorRamp2(seq(-2,2,length.out=9), colors = jdb_palette("solar_extr
 topAnno <- HeatmapAnnotation(
   "RNAlog2FC" = diffRNA[selectedTFs, ]$log2FoldChange,
   col = list(RNAlog2FC=RNAColors))
-pdf("../../data/mHSCAging10xV3/plots/motifScores.pdf", width = 10, height = 15)
+pdf("../../data/mHSCAging10xMultiome/plots/motifScores.pdf", width = 10, height = 15)
 Heatmap(
   motifScores[, selectedTFs], 
   row_split = subpopLabels,
@@ -113,4 +113,4 @@ diffResults <- data.frame(
 )
 
 # Also save as tsv file
-write.table(diffResults, "../../data/mHSCAging10xV3/diffMotifScores.tsv", sep = "\t", quote = F, row.names = F, col.names = T)
+write.table(diffResults, "../../data/mHSCAging10xMultiome/diffMotifScores.tsv", sep = "\t", quote = F, row.names = F, col.names = T)

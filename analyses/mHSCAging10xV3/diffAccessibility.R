@@ -16,7 +16,7 @@ source("../../code/getGroupData.R")
 ###############################
 
 # Group pseudo-bulk clusters into sub-populations
-pbulkClusters <- read.table("../../data/mHSCAging10xV3/pbulkClusters.txt")$V1
+pbulkClusters <- read.table("../../data/mHSCAging10xMultiome/pbulkClusters.txt")$V1
 subpopAnno <- list(
   "Old_1" = "Old Mk-biased", 
   "Old_2" = "Old intermediate",
@@ -32,7 +32,7 @@ subpopLabels <- unname(sapply(pbulkClusters, function(x){subpopAnno[[x]]}))
 ####################################################
 
 # Initialize a footprintingProject object
-projectName <- "mHSCAging10xV3/"
+projectName <- "mHSCAging10xMultiome/"
 project <- footprintingProject(projectName = projectName, 
                                refGenome = "mm10")
 projectMainDir <- "../../"
@@ -41,7 +41,7 @@ dataDir(project) <- projectDataDir
 mainDir(project) <- projectMainDir
 
 # Load region ranges
-regions <- readRDS(paste0(projectMainDir, "data/mHSCAging10xV3/regionRanges.rds"))
+regions <- readRDS(paste0(projectMainDir, "data/mHSCAging10xMultiome/regionRanges.rds"))
 
 # Set the regionRanges slot
 regionRanges(project) <- regions
@@ -53,8 +53,8 @@ barcodeGrouping(project) <- barcodeGroups
 groups(project) <- gtools::mixedsort(unique(barcodeGroups$group))
 
 # Getting the pseudobulk-by-region-by-position counts tensor from a fragment file
-pathToFrags <- "../../data/mHSCAging10xV3/all.frags.filt.tsv.gz"
-if(!dir.exists("../../data/mHSCAging10xV3/chunkedCountTensor/")){
+pathToFrags <- "../../data/mHSCAging10xMultiome/all.frags.filt.tsv.gz"
+if(!dir.exists("../../data/mHSCAging10xMultiome/chunkedCountTensor/")){
   getCountTensor(project, pathToFrags, barcodeGroups, returnCombined = F)
 }
 
@@ -97,7 +97,7 @@ for(subpop in c("Mk-biased", "multi-lineage", "all")){
   diffATAC <- diffATAC[!is.na(diffATAC$padj),]
   diffATAC <- diffATAC[order(diffATAC$pvalue),] 
   
-  write.table(diffATAC, paste0("../../data/mHSCAging10xV3/diffATAC_", subpop, ".tsv"),
+  write.table(diffATAC, paste0("../../data/mHSCAging10xMultiome/diffATAC_", subpop, ".tsv"),
               sep = "\t", quote = F, row.names = T)
 }
 

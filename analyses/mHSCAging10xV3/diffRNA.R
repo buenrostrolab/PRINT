@@ -11,13 +11,13 @@ source("../../code/getGroupData.R")
 ###################
 
 # Load footprinting project
-project <- readRDS("../../data/mHSCAging10xV3/project.rds")
+project <- readRDS("../../data/mHSCAging10xMultiome/project.rds")
 
 # Load single cell RNA data
-scRNA <- readRDS("../../data/mHSCAging10xV3/scRNA.rds")
+scRNA <- readRDS("../../data/mHSCAging10xMultiome/scRNA.rds")
 
 # Load barcodes for each pseudo-bulk
-barcodeGroups <- read.table("../../data/mHSCAging10xV3/barcodeGrouping.txt", header = T)
+barcodeGroups <- read.table("../../data/mHSCAging10xMultiome/barcodeGrouping.txt", header = T)
 barcodeGrouping(project) <- barcodeGroups
 groups(project) <- gtools::mixedsort(unique(barcodeGroups$group))
 
@@ -50,5 +50,5 @@ dds <- DESeq2::DESeq(dds)
 diffRNA <- DESeq2::results(dds, contrast = c("Age","Old","Young"))
 diffRNA <- diffRNA[!is.na(diffRNA$padj),]
 diffRNA <- diffRNA[order(diffRNA$pvalue),]
-write.table(diffRNA, "../../data/mHSCAging10xV3/diffRNA.tsv",
+write.table(diffRNA, "../../data/mHSCAging10xMultiome/diffRNA.tsv",
             sep = "\t", quote = F)
