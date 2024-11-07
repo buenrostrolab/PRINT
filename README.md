@@ -43,6 +43,10 @@ Hu, Horlbeck, Zhang et al., Multi-scale footprints reveal the organization of ci
 
 Currently the framework can be installed by cloning the github repo. Relevant input data can be found at https://zenodo.org/records/13963610. Accession number of public datasets can be found in the Data Availability section and Supplementary Table 8 in our paper.
 
-### 6. Support
+### 6. Interative data browsers
+
+Interactive visualization using Shinyapps can be found at https://buenrostrolab.shinyapps.io/ACAMShiny/ (human bone marrow) and https://buenrostrolab.shinyapps.io/aging/ (mouse HSC aging).
+
+### 7. Support
 
 If you have any questions, please feel free to open an issue. We appreciate everyone's contribution!
