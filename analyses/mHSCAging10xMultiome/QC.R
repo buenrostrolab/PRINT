@@ -21,7 +21,7 @@ peaks <- GRanges(seqnames = peakBed$V1,
                  ranges = IRanges(start = peakBed$V2, end = peakBed$V3))
 
 # Get peak-by-cell count matrix
-scATAC <- BuenRTools::getCountsFromFrags(paste0("../../data/", dataset, "/all.frags.tsv.gz"), peaks)
+scATAC <- getCountsFromFrags(paste0("../../data/", dataset, "/all.frags.tsv.gz"), peaks)
 
 # Plot Depth-FRIP plot
 plotData <- data.frame(

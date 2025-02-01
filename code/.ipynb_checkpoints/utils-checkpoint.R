@@ -609,6 +609,18 @@ get_density <- function(x, y, n = 100) {
   return(dens$z[ii])
 }
 
+extractTFNames <- function(motifIDs) 
+{
+    if (all(grepl("_", motifIDs, fixed = TRUE))) {
+        sapply(strsplit(sapply(strsplit(motifIDs, "_LINE.", fixed = FALSE), 
+            "[[", 2), "_", fixed = FALSE), "[[", 2)
+    }
+    else {
+        message("One or more provided motif IDs do not contain any '_' characters .. returning IDs as is")
+        motifIDs
+    }
+}
+
 # Calculate motif enrichment in a selected set of region (genomic regions)
 motifRegionZTest <-   function(regionSet, ### region_set: vector of region ids you wish to test for motif enrichment
                              bgRegions, ### bg_regions: matrix of background region selection iterations by chromVAR
@@ -655,7 +667,7 @@ motifRegionZTest <-   function(regionSet, ### region_set: vector of region ids y
     # generate data.frame object of relevant statistics
     d <- data.frame(
       motifID = motif,
-      gene = BuenRTools::extractTFNames(motif),
+      gene = extractTFNames(motif),
       motif_obs_freq = p.tab[motif],
       motif_bg_freq = mean(bg.tab[motif, ]),
       motif_counts = p.tab[motif] * length(regionSet),
@@ -687,11 +699,11 @@ getTSSEnrichment <- function(
   }
   
   if(genome == "hg38"){
-    TSS <- sort(sortSeqlevels(BuenRTools::hg38TSSRanges))
+    TSS <- sort(sortSeqlevels(FigR::hg38TSSRanges))
   }else if(genome == "hg19"){
-    TSS <- sort(sortSeqlevels(BuenRTools::hg19TSSRanges))
+    TSS <- sort(sortSeqlevels(FigR::hg19TSSRanges))
   }else if(genome == "mm10"){
-    TSS <- sort(sortSeqlevels(BuenRTools::mm10TSSRanges))
+    TSS <- sort(sortSeqlevels(FigR::mm10TSSRanges))
   }
   
   chr <- paste0(seqnames(TSS))
@@ -758,4 +770,158 @@ conv <- function(x, # Input vector x
   smoothKernel <- rep(1, 2 * r)
   xConv <- cladoRcpp::rcpp_convolve(x, smoothKernel)
   xConv[(r + 1):(length(x) + r)]
+}
+
+fragsToRanges <- function(fragFile, barcodeList = NULL, startsAre0based = TRUE, 
+    ...) 
+{
+    cat("Reading in fragment file ..\n")
+    if (is.null(barcodeList)) {
+        cat("Reading all barcodes found within file ..\n")
+        GA <- data.table::fread(fragFile, sep = "\t", showProgress = TRUE, 
+            ...) %>% as.data.frame() %>% GenomicRanges::makeGRangesFromDataFrame(seqnames.field = "V1", 
+            start.field = "V2", end.field = "V3", keep.extra.columns = TRUE, 
+            starts.in.df.are.0based = startsAre0based)
+    }
+    else {
+        cat("Reading only select barcodes specified within list from file ..\n")
+        GA <- data.table::fread(fragFile, sep = "\t", showProgress = TRUE, 
+            ...) %>% as.data.frame() %>% dplyr::filter(V4 %in% 
+            barcodeList) %>% GenomicRanges::makeGRangesFromDataFrame(seqnames.field = "V1", 
+            start.field = "V2", end.field = "V3", keep.extra.columns = TRUE, 
+            starts.in.df.are.0based = startsAre0based)
+    }
+    return(GA)
+}
+
+getCountsFromFrags <- function(fragFile, peaks, barcodeList = NULL, maxFragLength = NULL, 
+    addColData = TRUE) 
+{
+    start_time <- Sys.time()
+    if (class(fragFile) == "character") {
+        GA <- fragsToRanges(fragFile, barcodeList = barcodeList, 
+            startsAre0based = TRUE)
+    }
+    else if (class(fragFile) == "GRanges") {
+        GA <- fragFile
+        if (!is.null(barcodeList)) {
+            cat("Retaining only select barcodes specified within list ..\\n")
+            GA <- GA[mcols(GA)[, 1] %in% barcodeList]
+        }
+    }
+    if (ncol(mcols(GA)) > 1) {
+        if (inherits(mcols(GA)[2][, 1], "character")) {
+            colnames(mcols(GA)) <- c("barcodeID", "readID")
+        }
+        else if (inherits(mcols(GA)[2][, 1], "integer")) {
+            colnames(mcols(GA)) <- c("barcodeID", "pcrDup")
+        }
+    }
+    else {
+        colnames(mcols(GA)) <- "barcodeID"
+    }
+    if (!is.null(maxFragLength)) {
+        cat("Removing frags with length > ", maxFragLength, " bp ..\n")
+        GA <- GA[width(GA) <= maxFragLength]
+        if (length(GA) == 0) 
+            stop("Fragment filtering resulting in 0 aligned fragments. Please check / change the provided filter size ..\n")
+    }
+    barcodes <- as.character(GA$barcodeID)
+    denom <- table(barcodes)
+    uniqueBarcodes <- names(denom)
+    id <- factor(barcodes, levels = uniqueBarcodes)
+    cat("Finding overlap between peaks and fragments in data ..\n")
+    ovPEAKStarts <- findOverlaps(query = peaks, subject = resize(GA, 
+        width = 1, fix = "start"))
+    ovPEAKEnds <- findOverlaps(query = peaks, subject = resize(GA, 
+        width = 1, fix = "end"))
+    cat("Filtering for valid fragment-peak overlaps based on cut site start/end coordinates ..\n")
+    validHits <- unique.data.frame(rbind(as.data.frame(ovPEAKStarts), 
+        as.data.frame(ovPEAKEnds)))
+    require(dplyr)
+    cat("Generating matrix of counts ..\n")
+    countdf <- data.frame(peaks = validHits$queryHits, sample = as.numeric(id)[validHits$subjectHits]) %>% 
+        dplyr::group_by(peaks, sample) %>% dplyr::summarise(count = n()) %>% 
+        data.matrix()
+    m <- Matrix::sparseMatrix(i = c(countdf[, 1], length(peaks)), 
+        j = c(countdf[, 2], length(uniqueBarcodes)), x = c(countdf[, 
+            3], 0))
+    colnames(m) <- uniqueBarcodes
+    if (addColData) {
+        cat("Computing sample read depth and FRIP ..\n")
+        colData <- data.frame(sample = uniqueBarcodes, depth = as.numeric(denom), 
+            FRIP = Matrix::colSums(m)/as.numeric(denom), stringsAsFactors = FALSE)
+        stopifnot(all.equal(colData$sample, colnames(m)))
+        if (any(colData$FRIP > 1)) 
+            warning("One or more barcodes ended up with FRIP score > 1 .. check your fragment file as it may contain some abnormally large fragments that should be removed ..\n")
+        cat("Generating SummarizedExperiment object ..\n")
+        SE <- SummarizedExperiment(rowRanges = peaks, assays = list(counts = m), 
+            colData = colData)
+    }
+    else {
+        cat("Generating SummarizedExperiment object ..\n")
+        SE <- SummarizedExperiment(rowRanges = peaks, assays = list(counts = m))
+    }
+    cat("Done!\n")
+    end_time <- Sys.time()
+    cat("Time elapsed: ", end_time - start_time, units(end_time - 
+        start_time), " \n\n")
+    return(SE)
+}
+
+getGeneScoresFromPeaks <- function(SE, geneList = NULL, genome = c("hg19", "hg38", "mm10"), 
+    TSSwindow = 10000, getWeightsOnly = FALSE) 
+{
+    if (length(genome) > 1) 
+        stop("Must specify one of hg19, hg38 or mm10 as a genome build for currently supported TSS annotations..\n")
+    if (!genome %in% c("hg19", "hg38", "mm10")) 
+        stop("You must specify one of hg19, hg38 or mm10 as a genome build for currently supported TSS annotations..\n")
+    switch(genome, hg19 = {
+        TSSg <- FigR::hg19TSSRanges
+    }, hg38 = {
+        TSSg <- FigR::hg38TSSRanges
+    }, mm10 = {
+        TSSg <- FigR::mm10TSSRanges
+    })
+    TSSg$gene_name <- as.character(TSSg$gene_name)
+    if (!is.null(geneList)) {
+        if (!(all(geneList %in% as.character(TSSg$gene_name)))) 
+            stop("One or more of the gene names supplied is not present in the annotation provided..\n")
+        cat("Running gene-peak mapping for genes:", geneList, 
+            sep = "\n")
+        cat("........\n")
+        TSSg <- TSSg[TSSg$gene_name %in% geneList, ]
+    }
+    else {
+        cat("Running gene-peak mapping for all genes in annotation! (n = ", 
+            length(TSSg), ") This is bound to take more time than querying specific markers ..\n", 
+            sep = "")
+    }
+    cat("Using window of: ", TSSwindow, " bp (total) around TSS per gene ..\n")
+    TSSflank <- GenomicRanges::flank(TSSg, width = TSSwindow/2, 
+        both = TRUE)
+    if (!all(start(TSSflank) > 0)) {
+        cat("WARNING: ", sum(start(TSSflank) < 0), " flanked TSS window(s) found to extend beyond the chromosomal boundary .. Resetting start coordinates will result in uneven bins for these TSSs..\n")
+        start(TSSflank)[start(TSSflank) < 0] <- 0
+    }
+    peakg <- GenomicRanges::granges(SE)
+    peakSummits <- GenomicRanges::start(peakg) + GenomicRanges::width(peakg)/2
+    GenomicRanges::start(peakg) <- GenomicRanges::end(peakg) <- peakSummits
+    TSSPeakOverlap <- GenomicRanges::findOverlaps(TSSflank, peakg)
+    cat("Determining peak weights based on exponential inverse distance to TSS ..\n")
+    distToTSS <- abs(start(peakg)[subjectHits(TSSPeakOverlap)] - 
+        start(TSSg)[queryHits(TSSPeakOverlap)])
+    weights <- exp(-1 * (distToTSS/1000))
+    cat("Assembling Peaks x Genes weights matrix ..\n")
+    m <- Matrix::sparseMatrix(i = c(subjectHits(TSSPeakOverlap), 
+        length(peakg)), j = c(queryHits(TSSPeakOverlap), length(TSSflank)), 
+        x = c(weights, 0))
+    colnames(m) <- TSSg$gene_name
+    if (getWeightsOnly) 
+        return(m)
+    weights.m <- m[, Matrix::colSums(m) != 0]
+    cat("Assembling Gene x Cells scores matrix ..\n")
+    geneScoresMat <- Matrix::t(weights.m) %*% SummarizedExperiment::assay(SE)
+    cat("Done!\n\n")
+    return(geneScoresMat)
 }

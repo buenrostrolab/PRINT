@@ -7,6 +7,7 @@ library(Seurat)
 library(Signac)
 library(SummarizedExperiment)
 library(ggplot2)
+source("../../code/utils.R")
 
 #########################
 # Merge fragments files #
@@ -159,13 +160,13 @@ dev.off()
 #################
 
 # Calculate gene scores
-geneScores <- BuenRTools::getGeneScoresFromPeaks(scATACSE[, colnames(scATACSeurat)], 
-                                                 genome = "mm10", 
-                                                 TSSwindow = 10000, 
-                                                 getWeightsOnly = FALSE)
+geneScores <- getGeneScoresFromPeaks(scATACSE[, colnames(scATACSeurat)], 
+                                     genome = "mm10", 
+                                     TSSwindow = 10000, 
+                                     getWeightsOnly = FALSE)
 
 # Normalize gene scores
-geneScores <- BuenRTools::centerCounts(geneScores)
+geneScores <- centerCounts(geneScores)
 
 # Calculate gene score of cluster markers
 seuratClusters <- scATACSeurat$seurat_clusters

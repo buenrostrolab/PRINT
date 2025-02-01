@@ -78,13 +78,13 @@ scATACSE <- SummarizedExperiment(
   rowRanges = GRanges(rownames(scATAC)))
 
 # Calculate gene scores
-geneScores <- BuenRTools::getGeneScoresFromPeaks(scATACSE, 
-                                                 genome = "mm10", 
-                                                 TSSwindow = 10000, 
-                                                 getWeightsOnly = FALSE)
+geneScores <- getGeneScoresFromPeaks(scATACSE, 
+                                     genome = "mm10", 
+                                     TSSwindow = 10000, 
+                                     getWeightsOnly = FALSE)
 
 # Normalize gene scores
-geneScores <- BuenRTools::centerCounts(geneScores, chunkSize = 1e4)
+geneScores <- centerCounts(geneScores, chunkSize = 1e4)
 
 # Marker genes to plot
 markers <- c("Cd3d", "Gata1", "Cd79a", "Selp",

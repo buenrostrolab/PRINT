@@ -1,0 +1,5 @@
+../../
+../../data/inVitroFootprints/
+50
+24
+2000

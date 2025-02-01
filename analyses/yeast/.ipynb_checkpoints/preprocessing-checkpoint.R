@@ -3,7 +3,6 @@ if (Sys.getenv("RSTUDIO") == "1"){
   setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 }
 
-library(BuenRTools)
 library(data.table)
 source("../../code/utils.R")
 
@@ -76,7 +75,7 @@ system("mv ../../data/yeast/ATAC/peakCalling/filtered.fixedwidthpeaks_800bp_1000
 peakBed <- read.table("../../data/yeast/peaks.bed", sep = "\t")
 peaks <- GRanges(seqnames = peakBed$V1,
                  ranges = IRanges(start = peakBed$V2, end = peakBed$V3))
-counts <- BuenRTools::getCountsFromFrags(
+counts <- getCountsFromFrags(
   fragFile = "../../data/yeast/merged.frags.gz",
   peaks = peaks
 )
