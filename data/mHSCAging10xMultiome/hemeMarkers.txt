@@ -1,0 +1,13 @@
+Stem,B cells,ILCs,Erythrocytes,Monocytes,Macrophages,Neutrophils,cDCs,pDCs,Basophils,Eosinophils,MK progenitors,MEP,GMP-mono,GMP-neutro,T cells,NK cells,migr DC,Lymphoid,Mast cells
+Cd34,Dntt,Ccl5,Hba-a2,Ly86,C1qb,Gstm1,Cd74,Siglech,Prss34,Prg2,Pf4,Gata1,Fcgr3,Lyz1,Bcl11b,Gzma,H2-Eb1,Ighm,Cma1
+Flt3,Vpreb1,Nkg7,Car1,Csf1r,,Fcnb,Itgb7,Ly6d,Ccl3,Prg3,Ppbp,Car2,Ctsg,Lyz2,Trdc,Nkg7,H2-Aa,Satb1,Tph1
+Ifitm1,Vpreb3,,Hbb-bs,Ms4a6d,,Ltf,Naaa,Cd7,Slpi,Epx,Thbs1,Mt2,Mpo,Elane,Lck,,H2-Ab1,Dntt,Papss2
+Ifitm3,Cd79b,,,Fabp5,,S100a9,Cst3,,Hgf,,Timp3,Car1,Ly6c2,Fcnb,,,H2-DMb1,Ctr9,Fcer1a
+Txnip,Fcrla,,,Ctss,,Itgb2l,Xcr1,,,,,Hba-a2,Ly86,Gstm1,,,Ccr7,Jchain,Gzmb
+Ly6a,Cd79a,,,Ms4a6c,,Elane,,,,,,Hbb-b1,F13a1,Camp,,,,,
+Hlf,,,,Tgfb1,,Mpo,,,,,,,Csf1r,Ltf,,,,,
+Serpina3f,,,,Olfm1,,Prtn3,,,,,,,Fcer1g,Cd63,,,,,
+Adgrl4,,,,Ccr2,,S100a6,,,,,,,Irf5,Cebpe,,,,,
+Procr,,,,Klf4,,S100a8,,,,,,,Klf4,Ngp,,,,,
+,,,,F13a1,,Lcn2,,,,,,,,Gfi1,,,,,
+,,,,,,Lrg1,,,,,,,,,,,,,
