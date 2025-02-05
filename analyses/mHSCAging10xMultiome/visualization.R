@@ -31,9 +31,6 @@ pseudobulkCenters <- read.table("../../data/mHSCAging10xV3/pseudobulkCenters.txt
                                 header = T)
 rownames(pseudobulkCenters) <- pseudobulkCenters$group
 
-# Load footprinting project
-project <- readRDS("../../data/mHSCAging10xV3/project.rds")
-
 # Load differential RNA testing results
 diffRNA <- read.table("../../data/mHSCAging10xV3/diffRNA.tsv")
 
@@ -306,7 +303,7 @@ dev.off()
 # Re-number pseudobulks #
 #########################
 
-pseudobulkNames <- groups(project)
+pseudobulkNames <- gtools::mixedsort(unique(barcodeGroups$group))
 pseudobulkCenters <- pseudobulkCenters[pseudobulkNames,]
 pseudobulkAges <- sapply(pseudobulkCenters$barcode, function(x){strsplit(x, "-")[[1]][2]})
 pseudobulkLSI <- cellEmbedding[pseudobulkCenters$barcode, 2]
@@ -315,12 +312,6 @@ pseudobulkLSI <- cellEmbedding[pseudobulkCenters$barcode, 2]
 # We don't use the first LSI because it highly correlates with depth
 reOrder <- c(order(pseudobulkLSI[pseudobulkAges == "Old"]), 
              order(pseudobulkLSI[pseudobulkAges == "Young"]) + sum(pseudobulkAges == "Old"))
-
-# Re-order and re-name pseudobulks
-groupATAC(project) <- groupATAC(project)[, reOrder]
-groupRNA(project) <- groupRNA(project)[, reOrder]
-colnames(groupATAC(project)) <- pseudobulkNames
-colnames(groupRNA(project)) <- pseudobulkNames
 
 # Re-label pseudobulk membership of single cells
 barcodeGroups <- data.table::rbindlist(lapply(

@@ -10,16 +10,11 @@ source("../../code/getGroupData.R")
 # Load input data #
 ###################
 
-# Load footprinting project
-project <- readRDS("../../data/mHSCAging10xMultiome/project.rds")
-
 # Load single cell RNA data
 scRNA <- readRDS("../../data/mHSCAging10xMultiome/scRNA.rds")
 
 # Load barcodes for each pseudo-bulk
 barcodeGroups <- read.table("../../data/mHSCAging10xMultiome/barcodeGrouping.txt", header = T)
-barcodeGrouping(project) <- barcodeGroups
-groups(project) <- gtools::mixedsort(unique(barcodeGroups$group))
 
 #############################
 # Differential RNA analysis #
