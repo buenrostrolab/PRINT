@@ -306,6 +306,7 @@ setGeneric("getTFBS",
                     chunkSize = 2000, # Number of regions per chunk
                     chunkInds = NULL, # Whether to only run the model on a specific subset of chunks. If so, provide chunk indices here
                     innerChunkSize = 10, # Number of regions per inner chunk
+                    tileSize = 10, # Size of tiles if sites is NULL
                     nCores = 16 # Number of cores to use
            ) standardGeneric("getTFBS"))
 
@@ -317,6 +318,7 @@ setMethod("getTFBS",
                    chunkSize = 2000,
                    chunkInds = NULL,
                    innerChunkSize = 10,
+                   tileSize = 10,
                    nCores = 16) {
             
             # Directory for storing intermediate results
@@ -425,6 +427,7 @@ setMethod("getTFBS",
                                     region = regions[regionInd],
                                     dispModels = dispModels,
                                     TFBSModel = TFBSModel,
+                                    tileSize = tileSize,
                                     sites = sites)
                       
                     }
